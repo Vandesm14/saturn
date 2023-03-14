@@ -1,23 +1,28 @@
 import { LastPropsStore, runTick } from './src/engine/run.ts';
 import { createSystem, System } from './src/engine/system.ts';
-import { closurePick, lerp } from './src/utils.ts';
+import { lerp, pick } from './src/utils.ts';
 
 let lastProps: LastPropsStore = new Map();
 type State = typeof state;
 let state = {
   TICK: 0,
-  start: 0,
-  end: 500,
-  current: 0,
-  t: 0,
-  activeTimeout: false,
+  progressBar: {
+    start: 0,
+    end: 500,
+    current: 0,
+    t: 0,
+    activeTimeout: false,
+  },
 };
 
 const systems: System<State, any>[] = [];
 systems.push(
-  createSystem<State, Pick<State, 't' | 'current' | 'start' | 'end'>>(
+  createSystem<
+    State,
+    Pick<State['progressBar'], 't' | 'current' | 'start' | 'end'>
+  >(
     'updateProgressBar',
-    closurePick(['t', 'current', 'start', 'end']),
+    (state) => pick(state.progressBar, ['t', 'current', 'start', 'end']),
     (state) => {
       state.t += 1 / (30 * 5);
       state.current = lerp(state.start, state.end, state.t);
@@ -27,7 +32,7 @@ systems.push(
         state.current = state.end;
       }
 
-      return state;
+      return { progressBar: state };
     }
   )
 );
@@ -35,10 +40,20 @@ systems.push(
 systems.push(
   createSystem<
     State,
-    Pick<State, 't' | 'current' | 'end' | 'activeTimeout' | 'start'>
+    Pick<
+      State['progressBar'],
+      't' | 'current' | 'end' | 'activeTimeout' | 'start'
+    >
   >(
     'resetProgressBar',
-    closurePick(['t', 'current', 'end', 'activeTimeout', 'start']),
+    (state) =>
+      pick(state.progressBar, [
+        't',
+        'current',
+        'end',
+        'activeTimeout',
+        'start',
+      ]),
     (state) => {
       if (
         state.t === 1 &&
@@ -49,7 +64,7 @@ systems.push(
         state.current = state.start;
       }
 
-      return state;
+      return { progressBar: state };
     }
   )
 );

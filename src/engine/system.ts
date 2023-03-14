@@ -1,7 +1,9 @@
+import { DeepPartial } from '../utils.ts';
+
 export interface System<S = unknown, P = unknown> {
   name: string;
   props: (state: S) => P;
-  fn: (props: P) => Partial<S>;
+  fn: (props: P) => DeepPartial<S>;
 }
 
 export function createSystem<S = unknown, P = unknown>(
@@ -15,15 +17,3 @@ export function createSystem<S = unknown, P = unknown>(
     fn,
   };
 }
-
-const testState = {
-  a: 1,
-  b: 2,
-  result: 0,
-  some: {
-    nested: {
-      property: 1,
-    },
-  },
-};
-type TestState = typeof testState;

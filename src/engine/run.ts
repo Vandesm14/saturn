@@ -1,5 +1,6 @@
 import { equal } from 'https://deno.land/x/equal@v1.5.0/mod.ts';
-import { System } from './system.ts';
+import { applyPartialDiff } from '../utils.ts';
+import { createSystem, System } from './system.ts';
 
 export type LastPropsStore = Map<string, unknown>;
 export type CoreState = {
@@ -15,6 +16,24 @@ export function runTick<S extends CoreState>({
   systems: System<S>[];
   lastProps: LastPropsStore;
 }) {
+  systems = [
+    ...systems,
+    createSystem<S>(
+      'TICK',
+      (s) => s.TICK,
+      // @ts-expect-error: FIXME: `t` is unknown because we cannot have `System<S, number>` due to the array of systems being `System<S, unkown>[]`. This is fine for now, but it should be fixed
+      (t) => ({ TICK: t + 1 })
+    ),
+    createSystem<S>(
+      'LOG',
+      (s) => s,
+      (s) => {
+        console.log(JSON.stringify(s, null, 2));
+        return {};
+      }
+    ),
+  ];
+
   return systems.reduce<{
     state: S;
     lastProps: LastPropsStore;
@@ -54,12 +73,10 @@ export function runSystem<S extends CoreState>({
 }) {
   const props = system.props(state);
   const isEqual = equal(props, lastProps);
-  lastProps = props;
+  lastProps = structuredClone(props);
 
   if (!isEqual) {
-    state = { ...state, ...system.fn(structuredClone(state)) };
-    console.log(JSON.stringify(state, null, 2));
-    state.TICK++;
+    state = applyPartialDiff(state, system.fn(props));
   }
 
   return { state, lastProps };

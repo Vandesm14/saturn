@@ -15,15 +15,7 @@ let state = {
 
 const systems: System<State, any>[] = [];
 systems.push(
-  createSystem<
-    State,
-    {
-      t: State['t'];
-      current: State['current'];
-      start: State['start'];
-      end: State['end'];
-    }
-  >(
+  createSystem<State, Pick<State, 't' | 'current' | 'start' | 'end'>>(
     'updateProgressBar',
     closurePick(['t', 'current', 'start', 'end']),
     (state) => {
@@ -43,13 +35,7 @@ systems.push(
 systems.push(
   createSystem<
     State,
-    {
-      t: State['t'];
-      current: State['current'];
-      end: State['end'];
-      activeTimeout: State['activeTimeout'];
-      start: State['start'];
-    }
+    Pick<State, 't' | 'current' | 'end' | 'activeTimeout' | 'start'>
   >(
     'resetProgressBar',
     closurePick(['t', 'current', 'end', 'activeTimeout', 'start']),

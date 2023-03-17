@@ -1,4 +1,4 @@
-import { DeepPartial } from '../utils.ts';
+import { DeepPartial } from '../utils';
 
 export interface System<S = unknown, P = unknown> {
   name: string;

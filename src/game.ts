@@ -1,10 +1,8 @@
-import { LastPropsStore, runTick } from './src/engine/run.ts';
-import { createSystem, System } from './src/engine/system.ts';
-import { lerp, pick } from './src/utils.ts';
+import { createSystem, System } from './engine/system';
+import { lerp, pick } from './utils';
 
-let lastProps: LastPropsStore = new Map();
 type State = typeof state;
-let state = {
+export const state = {
   TICK: 0,
   progressBar: {
     start: 0,
@@ -15,7 +13,7 @@ let state = {
   },
 };
 
-const systems: System<State, any>[] = [];
+export const systems: System<State, any>[] = [];
 systems.push(
   createSystem<
     State,
@@ -68,14 +66,3 @@ systems.push(
     }
   )
 );
-
-setInterval(() => {
-  const { state: newState, lastProps: newLastProps } = runTick({
-    state,
-    systems,
-    lastProps,
-  });
-
-  state = newState;
-  lastProps = newLastProps;
-}, 1000 / 30);

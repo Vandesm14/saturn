@@ -24,14 +24,6 @@ export function runTick<S extends CoreState>({
       // @ts-expect-error: FIXME: `t` is unknown because we cannot have `System<S, number>` due to the array of systems being `System<S, unkown>[]`. This is fine for now, but it should be fixed
       (t) => ({ TICK: t + 1 })
     ),
-    // createSystem<S>(
-    //   'LOG',
-    //   (s) => s,
-    //   (s) => {
-    //     console.log(JSON.stringify(s, null, 2));
-    //     return {};
-    //   }
-    // ),
   ];
 
   return systems.reduce<{

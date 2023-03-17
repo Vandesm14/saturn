@@ -1,7 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import React from 'react';
 import { useGame } from './hooks/useGame';
-import { shallow } from 'zustand/shallow';
 
 function App() {
   const { runTick, state } = useGame();

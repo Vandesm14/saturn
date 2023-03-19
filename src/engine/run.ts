@@ -1,6 +1,6 @@
 import equal from 'fast-deep-equal';
-import { applyPartialDiff } from '../utils';
 import { createSystem, System } from './system';
+import produce from 'immer';
 
 export type LastPropsStore = Map<string, unknown>;
 export type CoreState = {
@@ -63,13 +63,19 @@ export function runSystem<S extends CoreState>({
   system: System<S>;
   lastProps: unknown;
 }) {
-  const props = system.props(state);
-  const isEqual = equal(props, lastProps);
-  lastProps = structuredClone(props);
+  const newState = produce(state, (draft) => {
+    // @ts-expect-error: FIXME: Not sure how to fix this, Draft is a different type than State
+    const props = system.props(draft);
+    const isEqual = equal(props, lastProps);
+    lastProps = structuredClone(props);
 
-  if (!isEqual) {
-    state = applyPartialDiff(state, system.fn(props));
-  }
+    if (!isEqual) {
+      // Function mutates the draft
+      system.fn(props);
+    }
 
-  return { state, lastProps };
+    return draft;
+  });
+
+  return { state: newState, lastProps };
 }

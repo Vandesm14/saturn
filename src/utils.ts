@@ -3,9 +3,17 @@ export function pick<T extends Record<string, any>, K extends keyof T>(
   keys: ReadonlyArray<K>
 ): Pick<T, K> {
   const result: Partial<T> = {};
+
   for (const key of keys) {
-    result[key] = obj[key];
+    Object.defineProperty(result, key, {
+      get: () => obj[key],
+      set: (value: T[K]) => {
+        obj[key] = value;
+      },
+      enumerable: true,
+    });
   }
+
   return result as Pick<T, K>;
 }
 

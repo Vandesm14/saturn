@@ -1,9 +1,7 @@
-import { DeepPartial } from '../utils';
-
 export interface System<S = unknown, P = unknown> {
   name: string;
   props: (state: S) => P;
-  fn: (props: P) => DeepPartial<S>;
+  fn: (props: P) => void;
 }
 
 export function createSystem<S = unknown, P = unknown>(

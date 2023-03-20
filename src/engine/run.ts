@@ -7,6 +7,38 @@ export type CoreState = {
   TICK: number;
 };
 
+export type Game<S> = {
+  state: S;
+  tick: () => void;
+};
+
+export function game<S extends CoreState>({
+  systems,
+  state: initialState,
+}: {
+  systems: System<S>[];
+  state: S;
+}): Game<S> {
+  let lastProps = new Map<string, unknown>();
+  let state: S = structuredClone(initialState);
+
+  return {
+    tick: () => {
+      const { state: newState, lastProps: newLastProps } = runTick({
+        state,
+        systems,
+        lastProps,
+      });
+
+      state = newState;
+      lastProps = newLastProps;
+    },
+    get state() {
+      return structuredClone(state);
+    },
+  };
+}
+
 export function runTick<S extends CoreState>({
   state,
   systems,

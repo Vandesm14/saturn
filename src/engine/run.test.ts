@@ -23,13 +23,17 @@ function setup(): { state: StateA; lastProps: run.LastPropsStore } {
 describe('run', function () {
   describe('run.runSystem', function () {
     it('should allow incrementing of A', () => {
-      let { state, lastProps } = setup();
+      const { state, lastProps } = setup();
 
-      let system = createSystem<StateA, StateA>('increment a', all, (state) => {
-        state.a++;
+      const system = createSystem<StateA, StateA>(
+        'increment a',
+        all,
+        (state) => {
+          state.a++;
 
-        return state;
-      });
+          return state;
+        }
+      );
 
       run.runSystem({
         state,
@@ -38,6 +42,28 @@ describe('run', function () {
       });
 
       expect(state.a).toBe(2);
+    });
+
+    it('should allow incrementing of B', () => {
+      const { state, lastProps } = setup();
+
+      const system = createSystem<StateA, StateA>(
+        'increment b',
+        all,
+        (state) => {
+          state.b++;
+
+          return state;
+        }
+      );
+
+      run.runSystem({
+        state,
+        system: system as System<StateA, unknown>,
+        lastProps,
+      });
+
+      expect(state.b).toBe(2);
     });
   });
 
@@ -97,6 +123,65 @@ describe('run', function () {
 
       expect(state.a).toBe(2);
       expect(state.b).toBe(2);
+    });
+  });
+
+  describe('run.game', function () {
+    it('should allow incrementing of A', () => {
+      const { state } = setup();
+
+      const system = createSystem<StateA, StateA>(
+        'increment a',
+        all,
+        (state) => {
+          state.a++;
+
+          return state;
+        }
+      );
+
+      const game = run.game({
+        systems: [system as System<StateA, unknown>],
+        state,
+      });
+
+      game.tick();
+
+      expect(game.state.a).toBe(2);
+    });
+
+    it('should allow incrementing of A and B', () => {
+      const { state } = setup();
+
+      const systemA = createSystem<StateA, StateA>(
+        'increment a',
+        all,
+        (state) => {
+          state.a++;
+
+          return state;
+        }
+      );
+
+      const systemB = createSystem<StateA, StateA>(
+        'increment b',
+        all,
+        (state) => {
+          state.b++;
+
+          return state;
+        }
+      );
+
+      const game = run.game({
+        systems: [systemA, systemB] as System<StateA, unknown>[],
+        state,
+      });
+
+      game.tick();
+
+      expect(game.state.a).toBe(2);
+      expect(game.state.b).toBe(2);
     });
   });
 });

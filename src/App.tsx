@@ -3,7 +3,7 @@ import React from 'react';
 import { useGame } from './hooks/useGame';
 
 function App() {
-  const { runTick, state } = useGame();
+  const { runTick, state, setPath, partial } = useGame();
 
   React.useEffect(() => {
     setInterval(() => {
@@ -16,29 +16,33 @@ function App() {
       <pre>
         <code>{JSON.stringify(state, null, 2)}</code>
       </pre>
-      <div
-        style={{
-          width: `${state.progressBar.end}px`,
-          height: '20px',
-          backgroundColor: 'black',
-        }}
-      >
-        <div
-          style={{
-            width: `${state.progressBar.current}px`,
-            height: '20px',
-            backgroundColor: 'red',
-          }}
-        ></div>
-      </div>
-      <h2
-        style={{
-          position: 'absolute',
-          left: `${state.progressBar.current - 20}px`,
-        }}
-      >
-        {(state.progressBar.current / 100).toFixed(1)}
-      </h2>
+      <ul>
+        <li>
+          <label>
+            <input
+              type="checkbox"
+              checked={state.battery.on}
+              onChange={(e) => setPath('battery.on', e.target.checked)}
+            />
+            Battery
+          </label>
+        </li>
+        <li>
+          <label>
+            <input
+              type="checkbox"
+              checked={state.reactor.on}
+              onChange={(e) => partial({ reactor: { on: e.target.checked } })}
+            />
+            Reactor
+          </label>
+        </li>
+        <li>Bus volts: {state.power.volts}</li>
+        <li>Batt: {state.battery.on ? 'On' : 'Off'}</li>
+        <li>Batt volts: {state.battery.volts}</li>
+        <li>Reactor: {state.reactor.on ? 'On' : 'Off'}</li>
+        <li>Reactor volts: {state.reactor.volts}</li>
+      </ul>
     </>
   );
 }

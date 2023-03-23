@@ -1,48 +1,69 @@
 import { createSystem, System } from './engine/system';
-import { lerp } from './utils';
 
 type State = typeof state;
 export const state = {
   TICK: 0,
-  progressBar: {
-    start: 0,
-    end: 500,
-    current: 0,
-    t: 0,
-    activeTimeout: false,
+
+  reactor: {
+    volts: 0,
+    minVolts: 0,
+    maxVolts: 1000,
+
+    // Inputs
+    on: false,
+    start: false,
+  },
+
+  power: {
+    volts: 0,
+    minVolts: 0,
+    maxVolts: 500,
+
+    inVolts: [] as number[],
+  },
+
+  battery: {
+    volts: 0,
+    minVolts: 0,
+    maxVolts: 20,
+
+    // Inputs
+    on: false,
   },
 };
 
-export const systems: System<State>[] = [];
-systems.push(
-  createSystem<State>('updateProgressBar', (state) => {
-    const { progressBar } = state;
+export const systems: System<State>[] = [
+  createSystem<State>('battery.volts', (state) => {
+    const { battery } = state;
 
-    progressBar.t += 1 / (30 * 5);
-    progressBar.current = lerp(
-      progressBar.start,
-      progressBar.end,
-      progressBar.t
-    );
-
-    if (progressBar.t >= 1) {
-      progressBar.t = 1;
-      progressBar.current = progressBar.end;
+    if (battery.on) {
+      battery.volts = battery.maxVolts;
+    } else {
+      battery.volts = battery.minVolts;
     }
-  })
-);
+  }),
 
-systems.push(
-  createSystem<State>('resetProgressBar', (state) => {
-    const { progressBar } = state;
+  createSystem<State>('reactor.volts', (state) => {
+    const { reactor } = state;
 
-    if (
-      progressBar.t === 1 &&
-      progressBar.current === progressBar.end &&
-      !progressBar.activeTimeout
-    ) {
-      progressBar.t = 0;
-      progressBar.current = progressBar.start;
+    if (reactor.on) {
+      reactor.volts = reactor.maxVolts;
+    } else {
+      reactor.volts = reactor.minVolts;
     }
-  })
-);
+  }),
+
+  createSystem<State>('power.inVolts', (state) => {
+    const { inVolts } = state.power;
+    const { battery, reactor } = state;
+
+    inVolts.length = 0;
+    inVolts.push(battery.volts, reactor.volts);
+  }),
+
+  createSystem<State>('power.volts', (state) => {
+    const { inVolts } = state.power;
+
+    state.power.volts = inVolts.reduce((a, b) => a + b, 0);
+  }),
+];

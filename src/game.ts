@@ -1,5 +1,5 @@
 import { createSystem, System } from './engine/system';
-import { lerp, pick } from './utils';
+import { lerp } from './utils';
 
 type State = typeof state;
 export const state = {
@@ -13,56 +13,36 @@ export const state = {
   },
 };
 
-export const systems: System<State, any>[] = [];
+export const systems: System<State>[] = [];
 systems.push(
-  createSystem<
-    State,
-    Pick<State['progressBar'], 't' | 'current' | 'start' | 'end'>
-  >(
-    'updateProgressBar',
-    (state) => pick(state.progressBar, ['t', 'current', 'start', 'end']),
-    (state) => {
-      state.t += 1 / (30 * 5);
-      state.current = lerp(state.start, state.end, state.t);
+  createSystem<State>('updateProgressBar', (state) => {
+    const { progressBar } = state;
 
-      if (state.t >= 1) {
-        state.t = 1;
-        state.current = state.end;
-      }
+    progressBar.t += 1 / (30 * 5);
+    progressBar.current = lerp(
+      progressBar.start,
+      progressBar.end,
+      progressBar.t
+    );
 
-      return { progressBar: state };
+    if (progressBar.t >= 1) {
+      progressBar.t = 1;
+      progressBar.current = progressBar.end;
     }
-  )
+  })
 );
 
 systems.push(
-  createSystem<
-    State,
-    Pick<
-      State['progressBar'],
-      't' | 'current' | 'end' | 'activeTimeout' | 'start'
-    >
-  >(
-    'resetProgressBar',
-    (state) =>
-      pick(state.progressBar, [
-        't',
-        'current',
-        'end',
-        'activeTimeout',
-        'start',
-      ]),
-    (state) => {
-      if (
-        state.t === 1 &&
-        state.current === state.end &&
-        !state.activeTimeout
-      ) {
-        state.t = 0;
-        state.current = state.start;
-      }
+  createSystem<State>('resetProgressBar', (state) => {
+    const { progressBar } = state;
 
-      return { progressBar: state };
+    if (
+      progressBar.t === 1 &&
+      progressBar.current === progressBar.end &&
+      !progressBar.activeTimeout
+    ) {
+      progressBar.t = 0;
+      progressBar.current = progressBar.start;
     }
-  )
+  })
 );

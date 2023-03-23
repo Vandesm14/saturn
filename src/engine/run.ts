@@ -1,6 +1,5 @@
-import * as equal from 'fast-deep-equal';
-import { applyPartialDiff } from '../utils';
 import { createSystem, System } from './system';
+import { produce } from 'immer';
 
 export type LastPropsStore = Map<string, unknown>;
 export type CoreState = {
@@ -12,41 +11,12 @@ export type Game<S> = {
   tick: () => void;
 };
 
-export function game<S extends CoreState>({
-  systems,
-  state: initialState,
-}: {
-  systems: System<S>[];
-  state: S;
-}): Game<S> {
-  let lastProps = new Map<string, unknown>();
-  let state: S = structuredClone(initialState);
-
-  return {
-    tick: () => {
-      const { state: newState, lastProps: newLastProps } = runTick({
-        state,
-        systems,
-        lastProps,
-      });
-
-      state = newState;
-      lastProps = newLastProps;
-    },
-    get state() {
-      return structuredClone(state);
-    },
-  };
-}
-
 export function runTick<S extends CoreState>({
   state,
   systems,
-  lastProps,
 }: {
   state: S;
   systems: System<S>[];
-  lastProps: LastPropsStore;
 }) {
   systems = [
     ...systems,
@@ -58,50 +28,29 @@ export function runTick<S extends CoreState>({
     ),
   ];
 
-  return systems.reduce<{
-    state: S;
-    lastProps: LastPropsStore;
-  }>(
-    (acc, system) => {
-      // Get the data from the acc
-      const { state, lastProps } = acc;
+  return systems.reduce((acc, system) => {
+    // Get the data from the acc
+    const state = acc;
 
-      // Get the last props for this system
-      const lastPropsForSystem = lastProps.get(system.name) || {};
+    // Run the system and extract the new data
+    const newState = runSystem<S>({
+      state,
+      system,
+    });
 
-      // Run the system and extract the new data
-      const { state: newState, lastProps: newLastProps } = runSystem<S>({
-        state,
-        system,
-        lastProps: lastPropsForSystem,
-      });
-
-      // Set the new last props for this system
-      lastProps.set(system.name, newLastProps);
-
-      // Return the new data
-      return { state: newState, lastProps };
-    },
-    { state, lastProps }
-  );
+    // Return the new data
+    return newState;
+  }, state);
 }
 
 export function runSystem<S extends CoreState>({
   state,
   system,
-  lastProps,
 }: {
   state: S;
   system: System<S>;
-  lastProps: unknown;
 }) {
-  const props = system.props(state);
-  const isEqual = equal(props, lastProps);
-  lastProps = structuredClone(props);
-
-  if (!isEqual) {
-    state = applyPartialDiff(state, system.fn(props));
-  }
-
-  return { state, lastProps };
+  return produce(state, (draft) => {
+    system.fn(draft as S);
+  });
 }

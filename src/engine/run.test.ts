@@ -1,5 +1,5 @@
 import * as run from './run';
-import { all, createSystem } from './system';
+import { createSystem } from './system';
 import { System } from './system';
 
 type StateA = {
@@ -8,59 +8,45 @@ type StateA = {
   b: number;
 };
 
-function setup(): { state: StateA; lastProps: run.LastPropsStore } {
-  const lastProps = new Map();
-
-  const state = {
+function setup(): StateA {
+  return {
     TICK: 0,
     a: 1,
     b: 1,
   };
-
-  return { state, lastProps };
 }
 
 describe('run', function () {
   describe('run.runSystem', function () {
     it('should allow incrementing of A', () => {
-      const { state, lastProps } = setup();
+      let state = setup();
 
-      const system = createSystem<StateA, StateA>(
-        'increment a',
-        all,
-        (state) => {
-          state.a++;
+      const system = createSystem<StateA>('increment a', (state) => {
+        state.a++;
 
-          return state;
-        }
-      );
+        return state;
+      });
 
-      run.runSystem({
+      state = run.runSystem({
         state,
-        system: system as System<StateA, unknown>,
-        lastProps,
+        system: system as System<StateA>,
       });
 
       expect(state.a).toBe(2);
     });
 
     it('should allow incrementing of B', () => {
-      const { state, lastProps } = setup();
+      let state = setup();
 
-      const system = createSystem<StateA, StateA>(
-        'increment b',
-        all,
-        (state) => {
-          state.b++;
+      const system = createSystem<StateA>('increment b', (state) => {
+        state.b++;
 
-          return state;
-        }
-      );
+        return state;
+      });
 
-      run.runSystem({
+      state = run.runSystem({
         state,
-        system: system as System<StateA, unknown>,
-        lastProps,
+        system: system as System<StateA>,
       });
 
       expect(state.b).toBe(2);
@@ -69,9 +55,9 @@ describe('run', function () {
 
   describe('run.runTick', function () {
     it('should allow incrementing of A', () => {
-      let { state, lastProps } = setup();
+      let state = setup();
 
-      let system = createSystem<StateA, StateA>('increment a', all, (state) => {
+      let system = createSystem<StateA>('increment a', (state) => {
         state.a++;
 
         return state;
@@ -79,109 +65,38 @@ describe('run', function () {
 
       let tick = run.runTick({
         state,
-        systems: [system as System<StateA, unknown>],
-        lastProps,
+        systems: [system as System<StateA>],
       });
 
-      state = tick.state;
-      lastProps = tick.lastProps;
+      state = tick;
 
       expect(state.a).toBe(2);
     });
 
     it('should allow incrementing of A and B', () => {
-      let { state, lastProps } = setup();
+      let state = setup();
 
-      let systemA = createSystem<StateA, StateA>(
-        'increment a',
-        all,
-        (state) => {
-          state.a++;
+      let systemA = createSystem<StateA>('increment a', (state) => {
+        state.a++;
 
-          return state;
-        }
-      );
+        return state;
+      });
 
-      let systemB = createSystem<StateA, StateA>(
-        'increment b',
-        all,
-        (state) => {
-          state.b++;
+      let systemB = createSystem<StateA>('increment b', (state) => {
+        state.b++;
 
-          return state;
-        }
-      );
+        return state;
+      });
 
       const tick = run.runTick({
         state,
-        systems: [systemA, systemB] as System<StateA, unknown>[],
-        lastProps,
+        systems: [systemA, systemB] as System<StateA>[],
       });
 
-      state = tick.state;
-      lastProps = tick.lastProps;
+      state = tick;
 
       expect(state.a).toBe(2);
       expect(state.b).toBe(2);
-    });
-  });
-
-  describe('run.game', function () {
-    it('should allow incrementing of A', () => {
-      const { state } = setup();
-
-      const system = createSystem<StateA, StateA>(
-        'increment a',
-        all,
-        (state) => {
-          state.a++;
-
-          return state;
-        }
-      );
-
-      const game = run.game({
-        systems: [system as System<StateA, unknown>],
-        state,
-      });
-
-      game.tick();
-
-      expect(game.state.a).toBe(2);
-    });
-
-    it('should allow incrementing of A and B', () => {
-      const { state } = setup();
-
-      const systemA = createSystem<StateA, StateA>(
-        'increment a',
-        all,
-        (state) => {
-          state.a++;
-
-          return state;
-        }
-      );
-
-      const systemB = createSystem<StateA, StateA>(
-        'increment b',
-        all,
-        (state) => {
-          state.b++;
-
-          return state;
-        }
-      );
-
-      const game = run.game({
-        systems: [systemA, systemB] as System<StateA, unknown>[],
-        state,
-      });
-
-      game.tick();
-
-      expect(game.state.a).toBe(2);
-      expect(game.state.b).toBe(2);
     });
   });
 });

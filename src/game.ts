@@ -29,6 +29,8 @@ systems.push(
         state.t = 1;
         state.current = state.end;
       }
+
+      return { progressBar: state };
     }
   )
 );
@@ -59,6 +61,8 @@ systems.push(
         state.t = 0;
         state.current = state.start;
       }
+
+      return { progressBar: state };
     }
   )
 );

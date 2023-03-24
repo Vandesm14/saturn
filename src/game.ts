@@ -27,11 +27,13 @@ export const state = {
     // Required power drawn from the bus (e.g. control panel requires 10V)
     demand: {
       reactor: 0,
+      cpanel: 0,
       total: 0,
     },
     // Actual power drawn from the bus (e.g. control panel only gets 50% -> 5V due to supply/demand)
     out: {
       reactor: 0,
+      cpanel: 0,
       total: 0,
     },
 
@@ -42,6 +44,13 @@ export const state = {
     volts: 0,
     minVolts: 0,
     maxVolts: 20,
+
+    // Inputs
+    on: false,
+  },
+
+  cpanel: {
+    minVolts: 40,
 
     // Inputs
     on: false,
@@ -87,14 +96,15 @@ export const systems: System<State>[] = [
   }),
 
   createSystem<State>('power.supply-and-demand', (state) => {
-    const { power, battery, reactor } = state;
+    const { power, battery, reactor, cpanel } = state;
 
     power.supply.battery = battery.volts;
     power.supply.reactor = reactor.volts.value;
     power.supply.total = power.supply.battery + power.supply.reactor;
 
     power.demand.reactor = reactor.on ? reactor.minVolts : 0;
-    power.demand.total = power.demand.reactor;
+    power.demand.cpanel = cpanel.on ? cpanel.minVolts : 0;
+    power.demand.total = power.demand.reactor + power.demand.cpanel;
   }),
 
   createSystem<State>('power.out', (state) => {
@@ -106,6 +116,7 @@ export const systems: System<State>[] = [
     const percent = Math.min(1, totalSupply / totalDemand);
 
     out.reactor = demand.reactor * percent || 0;
+    out.cpanel = demand.cpanel * percent || 0;
     out.total = demand.total * percent || 0;
   }),
 

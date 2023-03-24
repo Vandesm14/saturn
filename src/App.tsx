@@ -37,12 +37,26 @@ function App() {
             Reactor
           </label>
         </li>
-        <li>Bus volts: {state.power.supply.total}</li>
-        <li>Bus undervolt: {state.power.undervolt ? 'Warn' : ''}</li>
-        <li>Batt: {state.battery.on ? 'On' : 'Off'}</li>
-        <li>Batt volts: {state.battery.volts}</li>
-        <li>Reactor: {state.reactor.on ? 'On' : 'Off'}</li>
-        <li>Reactor volts: {state.reactor.volts.value}</li>
+        <li>
+          <label>
+            <input
+              type="checkbox"
+              checked={state.cpanel.on}
+              onChange={(e) => partial({ cpanel: { on: e.target.checked } })}
+            />
+            Control Panel
+          </label>
+        </li>
+        {state.power.out.cpanel === state.cpanel.minVolts ? (
+          <>
+            <li>Bus volts: {state.power.supply.total}</li>
+            <li>Bus undervolt: {state.power.undervolt ? 'Warn' : ''}</li>
+            <li>Batt: {state.battery.on ? 'On' : 'Off'}</li>
+            <li>Batt volts: {state.battery.volts}</li>
+            <li>Reactor: {state.reactor.on ? 'On' : 'Off'}</li>
+            <li>Reactor volts: {state.reactor.volts.value}</li>
+          </>
+        ) : null}
       </ul>
     </>
   );

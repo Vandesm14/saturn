@@ -37,7 +37,8 @@ function App() {
             Reactor
           </label>
         </li>
-        <li>Bus volts: {state.power.volts}</li>
+        <li>Bus volts: {state.power.volts.value}</li>
+        <li>Bus undervolt: {state.power.undervolt ? 'Warn' : ''}</li>
         <li>Batt: {state.battery.on ? 'On' : 'Off'}</li>
         <li>Batt volts: {state.battery.volts}</li>
         <li>Reactor: {state.reactor.on ? 'On' : 'Off'}</li>

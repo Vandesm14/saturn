@@ -15,10 +15,6 @@ export function closurePick<T extends Record<string, any>, K extends keyof T>(
   return (obj) => pick(obj, keys);
 }
 
-export function lerp(start: number, end: number, t: number): number {
-  return start + (end - start) * t;
-}
-
 type DotPrefix<T extends string> = T extends '' ? '' : `.${T}`;
 export type NestedKeyof<T> = T extends Record<string, unknown>
   ? {

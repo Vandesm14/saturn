@@ -10,7 +10,7 @@ export function generate<T>(initial: T): Detector<T> {
   };
 }
 
-export function detect<T>(detector: Detector<T>, newValue: T) {
+export function newValue<T>(detector: Detector<T>, newValue: T) {
   detector.didChange = detector.value !== newValue;
   detector.value = newValue;
   return detector;

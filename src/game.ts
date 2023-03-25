@@ -31,7 +31,7 @@ export const state = {
       total: 0,
     },
     // Actual power drawn from the bus (e.g. control panel only gets 50% -> 5V due to supply/demand)
-    out: {
+    receive: {
       reactor: 0,
       cpanel: 0,
       total: 0,
@@ -71,7 +71,7 @@ export const systems: System<State>[] = [
   createSystem<State>('reactor.targetVolts', (state) => {
     const { reactor, power } = state;
 
-    if (reactor.on && power.out.reactor >= reactor.minVolts) {
+    if (reactor.on && power.receive.reactor >= reactor.minVolts) {
       reactor.targetVolts = changeDetector.newValue(
         reactor.targetVolts,
         reactor.maxVolts
@@ -107,17 +107,17 @@ export const systems: System<State>[] = [
     power.demand.total = power.demand.reactor + power.demand.cpanel;
   }),
 
-  createSystem<State>('power.out', (state) => {
-    const { supply, demand, out } = state.power;
+  createSystem<State>('power.receive', (state) => {
+    const { supply, demand, receive } = state.power;
 
     const totalSupply = Object.values(supply).reduce((a, b) => a + b, 0);
     const totalDemand = Object.values(demand).reduce((a, b) => a + b, 0);
 
     const percent = Math.min(1, totalSupply / totalDemand);
 
-    out.reactor = demand.reactor * percent || 0;
-    out.cpanel = demand.cpanel * percent || 0;
-    out.total = demand.total * percent || 0;
+    receive.reactor = demand.reactor * percent || 0;
+    receive.cpanel = demand.cpanel * percent || 0;
+    receive.total = demand.total * percent || 0;
   }),
 
   createSystem<State>('power.undervolt', (state) => {

@@ -47,7 +47,7 @@ function App() {
             Control Panel
           </label>
         </li>
-        {state.power.out.cpanel === state.cpanel.minVolts ? (
+        {state.power.receive.cpanel === state.cpanel.minVolts ? (
           <>
             <li>Bus volts: {state.power.supply.total}</li>
             <li>Bus undervolt: {state.power.undervolt ? 'Warn' : ''}</li>

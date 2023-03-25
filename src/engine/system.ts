@@ -12,3 +12,10 @@ export function createSystem<S = unknown>(
     fn,
   };
 }
+
+export function createAnonSystem<S = unknown>(fn: System<S>['fn']): System<S> {
+  return {
+    name: '',
+    fn,
+  };
+}

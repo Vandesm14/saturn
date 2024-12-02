@@ -1,129 +1,93 @@
-import { changeDetector, interpolation } from './blocks';
-import { createSystem, System } from './engine/system';
+import { nanoid } from 'nanoid';
+import { buildWorld, createSystem, IPreptimeWorld, queryComponents } from 'sim-ecs';
 
-type State = typeof state;
-export const state = {
-  TICK: 0,
+type EntityID = string;
 
-  reactor: {
-    volts: interpolation.generate(),
+class Meta {
+  name: string;
+  constructor(name: Meta['name']) {
+    this.name = name;
+  }
+}
 
-    minVolts: 10,
-    maxVolts: 1000,
+class Bus {
+  id: string;
+  list: Set<EntityID>;
+  constructor(id: Bus['id'], list: EntityID[]) {
+    this.id = id;
+    this.list = new Set(list);
+  }
+}
 
-    targetVolts: changeDetector.generate(0),
+class Supply {
+  value: number;
+  constructor(value: Supply['value']) {
+    this.value = value;
+  }
+}
 
-    // Inputs
-    on: false,
-  },
+class Demand {
+  value: number;
+  constructor(value: Demand['value']) {
+    this.value = value;
+  }
+}
 
-  power: {
-    // Power supplied to the bus (e.g. battery supplies 20V)
-    supply: {
-      battery: 0,
-      reactor: 0,
-      total: 0,
-    },
-    // Required power drawn from the bus (e.g. control panel requires 10V)
-    demand: {
-      reactor: 0,
-      cpanel: 0,
-      total: 0,
-    },
-    // Actual power drawn from the bus (e.g. control panel only gets 50% -> 5V due to supply/demand)
-    receive: {
-      reactor: 0,
-      cpanel: 0,
-      total: 0,
-    },
+class Receives {
+  value: number;
+  constructor(value: Receives['value']) {
+    this.value = value;
+  }
+}
 
-    undervolt: false,
-  },
+class OnOff {
+  value: number;
+  constructor(value: OnOff['value']) {
+    this.value = value;
+  }
+}
 
-  battery: {
-    volts: 0,
-    minVolts: 0,
-    maxVolts: 20,
+const prepWorld = buildWorld()
+  .withComponents(Meta, Bus, Supply, Demand, Receives, OnOff)
+  .build();
 
-    // Inputs
-    on: false,
-  },
+function setup(prepWorld: IPreptimeWorld) {
+  const battery = prepWorld
+    .buildEntity()
+    .with(Meta, 'Battery')
+    .with(Supply, 50)
+    .with(OnOff, false)
+    .build();
 
-  cpanel: {
-    minVolts: 40,
+  const lightBulb = prepWorld
+    .buildEntity()
+    .with(Meta, 'Light Bulb')
+    .with(Demand, 10)
+    .with(Receives, 0)
+    .with(OnOff, false)
+    .build();
 
-    // Inputs
-    on: false,
-  },
-};
+  const toaster = prepWorld
+    .buildEntity()
+    .with(Meta, 'Toaster')
+    .with(Demand, 90)
+    .with(Receives, 0)
+    .with(OnOff, false)
+    .build();
 
-export const systems: System<State>[] = [
-  createSystem<State>('battery.volts', (state) => {
-    const { battery } = state;
+  prepWorld
+    .buildEntity()
+    .with(Meta, 'Bus')
+    .with(Bus, [battery.id, lightBulb.id, toaster.id])
+    .with(Supply, 0)
+    .with(Demand, 0)
+    .build();
 
-    if (battery.on) {
-      battery.volts = battery.maxVolts;
-    } else {
-      battery.volts = 0;
-    }
-  }),
+  return prepWorld;
+}
 
-  createSystem<State>('reactor.targetVolts', (state) => {
-    const { reactor, power } = state;
-
-    if (reactor.on && power.receive.reactor >= reactor.minVolts) {
-      reactor.targetVolts = changeDetector.newValue(
-        reactor.targetVolts,
-        reactor.maxVolts
-      );
-    } else {
-      reactor.targetVolts = changeDetector.newValue(reactor.targetVolts, 0);
-    }
-  }),
-
-  createSystem<State>('reactor.volts', (state) => {
-    const { reactor } = state;
-
-    if (reactor.targetVolts.didChange) {
-      reactor.volts = interpolation.begin(
-        reactor.volts,
-        reactor.volts.value,
-        reactor.targetVolts.value
-      );
-    } else {
-      reactor.volts = interpolation.update(reactor.volts, 1);
-    }
-  }),
-
-  createSystem<State>('power.supply-and-demand', (state) => {
-    const { power, battery, reactor, cpanel } = state;
-
-    power.supply.battery = battery.volts;
-    power.supply.reactor = reactor.volts.value;
-    power.supply.total = power.supply.battery + power.supply.reactor;
-
-    power.demand.reactor = reactor.on ? reactor.minVolts : 0;
-    power.demand.cpanel = cpanel.on ? cpanel.minVolts : 0;
-    power.demand.total = power.demand.reactor + power.demand.cpanel;
-  }),
-
-  createSystem<State>('power.receive', (state) => {
-    const { supply, demand, receive } = state.power;
-
-    const totalSupply = Object.values(supply).reduce((a, b) => a + b, 0);
-    const totalDemand = Object.values(demand).reduce((a, b) => a + b, 0);
-
-    const percent = Math.min(1, totalSupply / totalDemand);
-
-    receive.reactor = demand.reactor * percent || 0;
-    receive.cpanel = demand.cpanel * percent || 0;
-    receive.total = demand.total * percent || 0;
-  }),
-
-  createSystem<State>('power.undervolt', (state) => {
-    const { power } = state;
-
-    power.undervolt =
-      power.supply.total <= 0 || power.demand.total > power.supply.total;
-  }),
-];
+const busSupplyDemandSystem = createSystem({
+  query: queryComponents({
+    bus: 
+  })
+})
